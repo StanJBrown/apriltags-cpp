@@ -1,6 +1,6 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
-PROJECT(swatbotics_april_tags)
+PROJECT(SwatboticsAprilTags)
 
 SET(CMAKE_CXX_FLAGS "-Wall -g")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wsign-compare -frounding-math")
@@ -50,6 +50,6 @@ INSTALL(TARGETS ${PROJECT_NAME}
     ARCHIVE DESTINATION lib
 )
 
-INSTALL(DIRECTORY include/ DESTINATION include/swatbotics_april_tags
+INSTALL(DIRECTORY include/ DESTINATION include/${PROJECT_NAME}
     FILES_MATCHING PATTERN "*h"
 )
