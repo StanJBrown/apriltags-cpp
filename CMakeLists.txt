@@ -1,58 +1,55 @@
-# swatbotics/apriltags-cpp/CMakeLists.txt
+CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
-cmake_minimum_required(VERSION 2.6)
+PROJECT(swatbotics_april_tags)
 
-project(APRILTAGS)
+SET(CMAKE_CXX_FLAGS "-Wall -g")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wsign-compare -frounding-math")
+SET(CMAKE_CXX_FLAGS_DEBUG "-O")
+SET(CMAKE_CXX_FLAGS_RELEASE "-O2")
 
-set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
-set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 
-if(APPLE)
-  include_directories(/opt/local/include) # MacPorts
-  link_directories(/opt/local/lib)
-  find_library(OPENGL_LIBRARY OpenGL)
-else()
-  find_library(OPENGL_LIBRARY GL)
-  find_library(GLU_LIBRARY GLU)
-  set(OPENGL_LIBRARY ${OPENGL_LIBRARY} ${GLU_LIBRARY})
-endif()
+FIND_PACKAGE( CGAL QUIET COMPONENTS  )
+IF (CGAL_FOUND)
+    INCLUDE( ${CGAL_USE_FILE} )
+    ADD_DEFINITIONS(-DHAVE_CGAL)
+    FIND_PACKAGE( Boost REQUIRED )
+ELSE()
+    MESSAGE("CGAL not found, can not use new quad detector")
+ENDIF()
 
-find_library(GLUT_LIBRARY glut)
 
-include(FindPkgConfig)
+FIND_PACKAGE(OpenCV REQUIRED)
+INCLUDE_DIRECTORIES(
+    include/
+    ${OpenCV_INCLUDE_DIRS}
+    ${catkin_INCLUDE_DIRS}
+)
 
-pkg_search_module(OPENCV REQUIRED opencv>=2.3 opencv-2.3.1)
-include_directories(${OPENCV_INCLUDE_DIRS})
+FILE(GLOB_RECURSE apriltags_swatbotics_headers "include/*.h")
 
-pkg_check_modules(CAIRO cairo)
+ADD_LIBRARY(
+    ${PROJECT_NAME}
+    src/CameraUtil.cpp
+    src/DebugImage.cpp
+    src/Geometry.cpp
+    src/GrayModel.cpp
+    src/MathUtil.cpp
+    src/Refine.cpp
+    src/TagDetector.cpp
+    src/TagFamily.cpp
+    src/TagFamilies.cpp
+    src/UnionFindSimple.cpp
+)
 
-if (${CAIRO_FOUND})
-add_definitions(-DMZ_HAVE_CAIRO)
-endif ()
+TARGET_LINK_LIBRARIES(
+    ${PROJECT_NAME}
+    ${OpenCV_LIBRARIES}
+)
 
-find_package( CGAL QUIET COMPONENTS  )
+INSTALL(TARGETS ${PROJECT_NAME}
+    ARCHIVE DESTINATION lib
+)
 
-if (CGAL_FOUND)
-  include( ${CGAL_USE_FILE} )
-  add_definitions(-DHAVE_CGAL)
-  find_package( Boost REQUIRED )
-else()
-  message("CGAL not found, can not use new quad detector")
-endif()
-
-set(CMAKE_C_FLAGS "-Wall -g")
-set(CMAKE_CXX_FLAGS "-Wall -g")
-
-if (APPLE OR UNIX)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wsign-compare -frounding-math")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wsign-compare -frounding-math")
-endif()
-
-set(CMAKE_C_FLAGS_DEBUG "-O")
-set(CMAKE_CXX_FLAGS_DEBUG "-O")
-
-set(CMAKE_C_FLAGS_RELEASE "-O2")
-set(CMAKE_CXX_FLAGS_RELEASE "-O2")
-
-add_subdirectory(src)
-
+INSTALL(DIRECTORY include/ DESTINATION include/swatbotics_april_tags
+    FILES_MATCHING PATTERN "*h"
+)
